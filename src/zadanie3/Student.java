@@ -1,18 +1,27 @@
 package zadanie3;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 @DefaultStudent(imie = "Jan", nazwisko = "Nowak", index = 10000, oceny = {3, 5})
-public class Student {
+public class Student
+{
     private String imie, nazwisko;
+    @IgnoreEquals
     private int index;
+    @IgnoreEquals
     ArrayList<Double> oceny = new ArrayList<>();
 
-    public Student(String imie, String nazwisko, int index) {
+    @IgnoreEquals
+    public int nowePole;
+
+    public Student(String imie, String nazwisko, int index)
+    {
         this.imie = imie;
         this.nazwisko = nazwisko;
         this.index = index;
+        this.nowePole = 0;
     }
 
     public Student()
@@ -36,7 +45,8 @@ public class Student {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "zadanie3.Student{" +
                 "imie=" + imie + '\'' +
                 ", nazwisko='" + nazwisko + '\'' +
@@ -46,30 +56,45 @@ public class Student {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Student temp = (Student) o;
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
 
-        Class<?> c = this.getClass();
-        IgnoreEquals ignoreEqualsAnnotation = c.getAnnotation(IgnoreEquals.class);
-        if (ignoreEqualsAnnotation != null) {
-            List<String> ignoredFields = Arrays.asList(ignoreEqualsAnnotation.fields());
-            for (String ignoredField : ignoredFields) {
-                try {
-                    Field field = c.getDeclaredField(ignoredField);
-                    field.setAccessible(true);
-                    Object thisValue = field.get(this);
-                    Object tempValue = field.get(temp);
-                    if (!Objects.equals(thisValue, tempValue)) {
-                        return false;
-                    }
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
+        Field[] pola = this.getClass().getDeclaredFields();
+
+        for (Field pole : pola)
+        {
+            pole.setAccessible(true);
+
+            if (pole.isAnnotationPresent(IgnoreEquals.class))
+            {
+                continue;
+            }
+
+            try
+            {
+                Object wartoscTegoObiektu = pole.get(this);
+                Object wartoscDrugiegoObiektu = pole.get(o);
+
+                if (!Objects.equals(wartoscTegoObiektu, wartoscDrugiegoObiektu))
+                {
+                    return false;
                 }
+            }
+            catch (IllegalAccessException e)
+            {
+                e.printStackTrace();
+                return false;
             }
         }
 
-        return this.index == temp.index && this.imie.equals(temp.imie);
+        return true;
     }
 }
